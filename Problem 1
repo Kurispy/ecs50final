@@ -1,0 +1,26 @@
+-crossout section-
+The optimized code does not have a function prologue and epilogue
+The optimized code uses load effective address(leal)
+
+-worker section-
+The optimized code does not have a function prologue and eqilogue ***
+The optimized code uses square root (line 65).
+
+The optimized code uses floating point compare, line 66 in op code, uses CPU instruction instead of function call in nonop line 63 ***
+The addressing modes in the op code are more efficient than the non op code ***
+(line 125-126 non op vs line 140 op code)
+(line 131-132 non op vs line 144 op code)
+   
+
+The non optimized code uses nop (line 73)
+The optimized code uses leal on line 83-89, while the nonop code uses addl in line 75-83
+
+
+--COMFIRMED TOPICS--
+The optimized code does not have a function prologue and eqilogue ***
+
+The optimized code uses floating point compare, line 66 in op code, uses CPU instruction instead of function call in nonop line 63 ***
+
+The addressing modes in the op code are more efficient than the non op code ***
+(line 125-126 non op vs line 140 op code)
+(line 131-132 non op vs line 144 op code)
