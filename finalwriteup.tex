@@ -24,6 +24,22 @@ This optimization removes one PUSH, one POP, and two MOV operations per subrouti
 
 3. The optimized code uses more efficient addressing modes. (line 125-126 non op vs line 140 op code and line 131-132 non op vs line 144 op code)
 
+Primes$_{O}$ uses a more efficient addressing mode than Primes$_{U}$. A well known issue in assembly language is that a user is not allowed to have memory to memory access in a single line. In our Primes program, there are several instances where we must get the next element in a register and have it stored in a different register. A sample of the addressing mode in Primes$_{U}$(line 125-126) looks like:
+
+
+\hspace*{2.2in} addl \$4, \%eax \\
+
+\hspace*{2.2in} movl (\%eax), \%eax 
+
+
+Although there isn't a significant amount of time spent doing addition between two registers, it is an extra computation that must be executed every time, hence time that is wasted. On the other hand a more efficient method is seen with the addressing mode used in Primes$_{O}$(line 140) which looks like: 
+
+
+\hspace*{2.2in} movl 4(\%ebx), \%eax
+
+
+Here we automatically get the next element in register ebx and store it into register eax without the need of incrementing the pointer of the current register and then storing the contents of the incremented register to another register.
+
 % the $ delimiter marks the start and end of a mathematical expression
 
 \begin{equation}
