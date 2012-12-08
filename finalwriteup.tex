@@ -12,7 +12,13 @@
 
 \begin{document}
 
+In order to simplify both the writing and reading of this document, we have to decided to call the optimized version of Primes.c ``Primes$_{O}$'' and the unoptimized version of Primes.c ``Primes$_{U}$''.
+
 1. There is no function prologue and epilogue in the optimized code. (In worker and crossout)
+
+One of the easiest differences to spot between Primes$_{O}$ and Primes$_{U}$ is the lack of function prologues and epilogues that are present in the ``crossout" and ``worker" subroutines of Primes$_{U}$. It can also be noted that due to this, all values on the stack are referenced directly through \%esp in Primes$_{O}$ instead of through \%ebp like in Primes$_{U}$.
+
+This optimization removes one PUSH, one POP, and two MOV operations per subroutine call, which can save a good amount of time if there are many subroutine calls. However this comes at the cost of increased compile time, as the compiler must determine the location of each value on the stack every time the stack pointer is modified. (This does not have to be done when the frame pointer is used to reference values, since it does not change for the duration of the subroutine.) It can also cause problems when debugging, since it eliminates the ability to backtrace. 
 
 2. The optimized code uses a cpu specific instruction to perform a square root operation instead of a call to sqrt from the math library. (Line 65 in opt. code vs line 63 in normal code)
 
