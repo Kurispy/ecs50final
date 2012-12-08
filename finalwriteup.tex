@@ -12,19 +12,13 @@
 
 \begin{document}
 
-The famous Pythagoren Theorm concerns right triangles.  If the legs of
-the triangle have lengths x and y, and the length of the hypotenuse is z,
+1. There is no function prologue and epilogue in the optimized code. (In worker and crossout)
+
+2. The optimized code uses a cpu specific instruction to perform a square root operation instead of a call to sqrt from the math library. (Line 65 in opt. code vs line 63 in normal code)
+
+3. The optimized code uses more efficient addressing modes. (line 125-126 non op vs line 140 op code and line 131-132 non op vs line 144 op code)
+
 % the $ delimiter marks the start and end of a mathematical expression
-then $z = \sqrt{x^2+y^2}$.
-
-% a blank line means a new paragraph
-
-There are many proofs of this result.
-
-We can get the corresponding angles via inverse trig functions.  For
-instance, the angle formed by the sides of length x and z above, which
-we'll call $\theta$,   % here's a Greek letter
-is
 
 \begin{equation}
 \theta = cos^{-1}(\frac{x}{z})  % note the need for braces around the -1
