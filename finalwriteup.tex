@@ -20,7 +20,36 @@ One of the easiest differences to spot between Primes$_{O}$ and Primes$_{U}$ is 
 
 This optimization removes one PUSH, one POP, and two MOV operations per subroutine call, which can save a good amount of time if there are many subroutine calls. However this comes at the cost of increased compile time, as the compiler must determine the location of each value on the stack every time the stack pointer is modified. (This does not have to be done when the frame pointer is used to reference values, since it does not change for the duration of the subroutine.) It can also cause problems when debugging, since it eliminates the ability to backtrace. 
 
-2. The optimized code uses a cpu specific instruction to perform a square root operation instead of a call to sqrt from the math library. (Line 65 in opt. code vs line 63 in normal code)
+2. The optimized code uses leal on line 83-89, while the nonop code uses addl in line 75-83
+
+
+Another difference between Primes$_{U}$ and Primes$_{O}$ is that Primes$_{O}$ uses leal to compute an address as opposed to the former which uses a combination of addl and movl. 
+
+\begin{verbatim}
+Optimized Code
+.L14:
+    movl	 $nextbaselock, (%esp)
+    call	 pthread_mutex_lock
+    movl	 nextbase, %ebx
+    leal	 2(%ebx), %edx
+    movl	 %edx, nextbase
+    movl	 $nextbaselock, (%esp)
+    call	 pthread_mutex_unlock
+	
+Non Optimized Code
+.L8:
+    movl	 $nextbaselock, (%esp)
+    call	 pthread_mutex_lock
+    movl	 nextbase, %eax         
+    movl	 %eax, -12(%ebp)        
+    movl	 nextbase, %eax         
+    addl	 $2, %eax
+    movl	 %eax, nextbase
+    movl	 $nextbaselock, (%esp)
+    call pthread_mutex_unlock
+\end{verbatim}
+
+There are many benefits to use leal over addl/movl. First of all, the leal instruction does not set any flags as opposed to addl which will set OF, SF, ZF, AF, PF, CF. When an arithmetic instruction is used, such as add, this instruction will be processed by the arithmetic and logic unit (ALU) which then outputs a result. Each time the ALU is used, the flag register is immediately updated to correspond with the result from the ALU. On the other hand, the leal instruction gets its address from the Address Generation Unit (AGU) right as the instruction is executed. This is done by a technique called "instruction pipeline". This reduces the overhead of going through the ALU and updating the flag register thus increasing performance.
 
 3. The optimized code uses more efficient addressing modes. (line 125-126 non op vs line 140 op code and line 131-132 non op vs line 144 op code)
 
