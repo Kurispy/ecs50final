@@ -69,17 +69,41 @@ Although there isn't a significant amount of time spent doing addition between t
 
 Here we automatically get the next element in register ebx and store it into register eax without the need of incrementing the pointer of the current register and then storing the contents of the incremented register to another register.
 
-% the $ delimiter marks the start and end of a mathematical expression
+%---------------PART 2 OF PART 2 BEGINS HERE----------------
 
-\begin{equation}
-\theta = cos^{-1}(\frac{x}{z})  % note the need for braces around the -1
-\end{equation}
+%1st Statement
 
-% the parentheses in the above expression aren't quite big enough;
-% instead, we could have the LaTeX code
-% \begin{equation}
-% \theta = cos^{-1} \left ( \frac{x}{z} \right)  
-% \end{equation}
-% try it yourself (don't forget to remove the % comment symbols first)
+%Second Statement
+
+%3rd Statement
+Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
+\begin{verbatim}
+if (prime[i]) {
+     nprimes++;
+}
+\end{verbatim}
+We'll start off by presenting the entirety of the MIPS assembly code, and then work though it line by line. (We have assumed that the address of the first element of the ``prime" array is in the register \$s0 and that the index ``i" is in the register \$s1.)
+
+\begin{verbatim}
+sll $s2, $s1, 2
+ori $s3, $s0, 0
+addu $s3, $s3, $s2
+lw $s3, $s3
+beq $s3, $0, .L1
+addiu $s1, $s1, 1
+addiu $s4, $s4, 1
+\end{verbatim}
+
+Now let's look at the first chunk of code:
+
+\begin{verbatim}
+sll $s2, $s1, 2
+ori $s3, $s0, 0
+addiu $s3, $s3, $s2
+lw $s3, $s3
+\end{verbatim}
+
+The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) We then move the address of the first element of the $prime$ array (or just $prime$) into register \$s3, as \$s3 will eventually hold our accessed element of $prime$. 
+
 
 \end{document}  % required; the document ends here
