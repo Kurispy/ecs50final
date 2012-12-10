@@ -295,3 +295,50 @@ Now that the value we want to check is on the top of the stack, we use \textbf{i
 \\Part 1.1.3
 \\Part 1.2.1
 \end{document}
+
+\documentclass[12pt]{article}  
+
+
+\setlength{\oddsidemargin}{0.0 in}
+\setlength{\evensidemargin}{0.0 in}
+\setlength{\topmargin}{-0.25 in}
+\setlength{\headheight}{0 in}
+\setlength{\headsep}{0 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{9.25 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{2 mm}
+
+\begin{document}
+\title{To Assembly or Not to Assembly, That is the Question}
+\author{Christopher Chen, Stefan Peterson, Andrew Yi, Triet Nguyen}
+\maketitle
+Machine-specific assembly language optimizations provide many advantages over simply writing code in a higher or mid-level language such as C/C++. When writing in assembly, a programmer has direct control over the actions the hardware of the computer takes. This means that not only does the programmer know exactly what their program is doing, it also means that there are no actions being taken, say by a compiler interpreting some C code, that would cause loss of performance or undesired actions to be taken. Given these benefits, it must also be noted that using assembly language as a means of optimization goes against many other important goals of programming such as stability, sustainability, and portability. 
+
+
+Say for instance that you are trying to program an appliance such as a power tool. These devices run microcontrollers. If you need the ability to control one of their I/O pins, and want to perform some very specific task such as controlling an action every 8 clock cycles, you would need assembly. That time is too short to be managed by an interrupt, and higher level language compilers do not provide such specific control regarding the instruction stream. Assembly, on the other hand, provides this control with direct access to the system hardware. 
+
+
+Writing in house assembly can also be useful to further optimize code beyond what the compiler has knowledge of. Say for instance you write a function that is used to cast from a float variable to an int. This function would generate the following assembly code:
+
+\begin{verbatim}
+                          subl $8, %esp
+                          flds 12(%esp)
+                          fnstcw 6(%esp)
+                          movzwl 6(%esp), %eax
+                          orw $3072, %ax
+                          movw %ax, 4(%esp)
+                          fldcw 4(%esp)
+                          fistpl (%esp)
+                          fldcw 6(%esp)
+                          movl (%esp), %eax
+                          addl $8, %esp
+                          Ret
+\end{verbatim}
+
+This function wastes considerable time with unnecessary instruction calls and adversely affects the FPU (floating point unit) pipeline. The reason the compiler generates this code is because it needs to generate code for every foreseeable situation. The standard for converting from a floating point to an integer requires the truncation operation, but if the programmer knows that a rounding operation is an acceptable substitute, as it is in many audio and video applications (applications which generally deal with giant arrays of floats for data and calculation that must then be translated to integers), the code they could write would be far more efficient. There would be no need to store the FPU control word, modify it in a register, store it in the stack and then eventually load that value from the stack with the \textbf{fldcw} (FPU load control word) instruction. The specifics of what happen here aren’t really important, but the fact that you can cut out lines of instructions and most importantly remove the call to \textbf{fldcw}, which causes a flushing of the entire FPU pipeline, will cause dramatic improvements in speed.
+
+
+This, on the other hand, is exactly the problem with optimizing assembly language. You need to thoroughly know the architecture which you are targeting and know whether or not it provides support for certain tweaks that you can then implement. Even if it works on your desired machine, when you attempt to port that same software to another machine you may lose support for you application. In this case, an optimizing compiler that can target different platforms and accordingly apply optimizations is best.As technology advances, so to does the hardware which makes assembly code extremely difficult to maintain compared to high level languages, making it only ideal in situations where you don’t need to refactor the code very much. 
+
+\end{document}
