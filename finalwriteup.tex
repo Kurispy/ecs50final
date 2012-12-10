@@ -155,7 +155,7 @@ addiu $s1, $s1, 1
 addiu $s4, $s4, 1
 \end{verbatim}
 
-Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location that is outside the scop of this statement. 
+Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location that is outside the scope of this statement. 
 
 By now you may have noticed that the line
 
@@ -165,6 +165,36 @@ addiu $s1, $s1, 1
 
 does not actually correspond to the $nprimes++$ statement. What it actually corresponds to is the statement $i++$. This instruction is specifically placed here so as to fill a delay slot produced by the preceding $beq$ instruction, thereby increasing the efficiency of the code. It can be placed here because $i$ will be incremented regardless of whether we branch or not. Our last instruction is an $addiu$ that will only be executed if the $beq$ instruction did not branch. It is equivalent to the $nprimes++$ statement.
 
+%JVM
+
+Now on to the JVM version of the "compiled" code:
+
+(We'll assume $nprimes$ is in slot 1, $prime$ is in slot 2 and $i$ is in slot 3.)
+
+\begin{verbatim}
+10  aload_2
+11  iload_3
+12  iaload
+13  ifeq 0
+16  iinc 3, 1
+\end{verbatim}
+
+Let's split this code into two sgements that are roughly analagous to those given in the MIPS version of the code. Here's the first segement:
+
+\begin{verbatim}
+10  aload_2
+11  iload_3
+12  iaload
+\end{verbatim}
+
+In this portion of the code, we want to obtain the requested element of the $prime$ array. If we were to do this in the same manner that we used in the MIPS version, it would require a great deal of convoluted loads and adds. So we use iaload instead. But in order to use that instruction, a little setup is required first. We need to move the address of $prime$ onto the stack, and then the index of the requested element, which we do with $aload_2$ and $iload_3$. Now we are ready to execute $iaload$, which places the requested element of $prime$ onto the top of the stack. This brings us to the second portion:
+
+\begin{verbatim}
+13  ifeq 0
+16  iinc 3, 1
+\end{verbatim}
+
+Now that the value we want to check is on the top of the stack, we use $ifeq$ to check if the value is zero. (If we had used, say, $if_icmpeq$ instead, we would have had to place an extra 0 on the stack.) If it is, we branch to offset 0, which we assume to be the start of the for loop that this if statment is contained in. If the value is not zero, we continue on to increment slot 3 by 1, which in this case is our index, $i$.
 
 
 \end{document}  % required; the document ends here
