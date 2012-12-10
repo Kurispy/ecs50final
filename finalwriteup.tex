@@ -16,17 +16,20 @@
 
 \begin{document}
 
-In order to simplify both the writing and reading of this document, we have to decided to call the optimized version of Primes.c ``Primes$_{O}$'' and the unoptimized version of Primes.c ``Primes$_{U}$''.
+\begin{titlepage}
+\title{\Huge ECS 50 Final Report}
+\author{\huge Christopher Chen\\\huge Triet Nguyen\\\huge Stefan Peterson\\\huge Andrew Yi}
+\maketitle
+\end{titlepage}
 
-1. There is no function prologue and epilogue in the optimized code. (In worker and crossout)
-
+\part{}
+\section{Compiler Optimization}
+In order to simplify both the writing and reading of this section, we have to decided to call the optimized version of Primes.c ``Primes$_{O}$'' and the unoptimized version of Primes.c ``Primes$_{U}$''.
+\subsection{Function Prologues}
 One of the easiest differences to spot between Primes$_{O}$ and Primes$_{U}$ is the lack of function prologues and epilogues that are present in the ``crossout" and ``worker" subroutines of Primes$_{U}$. It can also be noted that due to this, all values on the stack are referenced directly through \%esp in Primes$_{O}$ instead of through \%ebp like in Primes$_{U}$.
 
 This optimization removes one PUSH, one POP, and two MOV operations per subroutine call, which can save a good amount of time if there are many subroutine calls. However this comes at the cost of increased compile time, as the compiler must determine the location of each value on the stack every time the stack pointer is modified. (This does not have to be done when the frame pointer is used to reference values, since it does not change for the duration of the subroutine.) It can also cause problems when debugging, since it eliminates the ability to backtrace. 
-
-2. The optimized code uses leal on line 83-89, while the nonop code uses addl in line 75-83
-
-
+\subsection{LEA versus ADD}
 Another difference between Primes$_{U}$ and Primes$_{O}$ is that Primes$_{O}$ uses leal to compute an address as opposed to the former which uses a combination of addl and movl. 
 
 \begin{verbatim}
@@ -54,26 +57,25 @@ Non Optimized Code
 \end{verbatim}
 
 There are many benefits to use leal over addl/movl. First of all, the leal instruction does not set any flags as opposed to addl which will set OF, SF, ZF, AF, PF, CF. When an arithmetic instruction is used, such as add, this instruction will be processed by the arithmetic and logic unit (ALU) which then outputs a result. Each time the ALU is used, the flag register is immediately updated to correspond with the result from the ALU. On the other hand, the leal instruction gets its address from the Address Generation Unit (AGU) right as the instruction is executed. This is done by a technique called "instruction pipeline". This reduces the overhead of going through the ALU and updating the flag register thus increasing performance.
-
-3. The optimized code uses more efficient addressing modes. (line 125-126 non op vs line 140 op code and line 131-132 non op vs line 144 op code)
+\subsection{Addressing Modes}
 
 Primes$_{O}$ uses a more efficient addressing mode than Primes$_{U}$. A well known issue in assembly language is that a user is not allowed to have memory to memory access in a single line. In our Primes program, there are several instances where we must get the next element in a register and have it stored in a different register. A sample of the addressing mode in Primes$_{U}$(line 125-126) looks like:
 
-
-\hspace*{2.2in} addl \$4, \%eax \\
-
-\hspace*{2.2in} movl (\%eax), \%eax 
-
+\begin{verbatim}
+    addl $4, %eax
+    movl (%eax), %eax 
+\end{verbatim}
 
 Although there isn't a significant amount of time spent doing addition between two registers, it is an extra computation that must be executed every time, hence time that is wasted. On the other hand a more efficient method is seen with the addressing mode used in Primes$_{O}$(line 140) which looks like: 
 
-
-\hspace*{2.2in} movl 4(\%ebx), \%eax
-
+\begin{verbatim}
+    movl 4(%ebx), %eax
+\end{verbatim}
 
 Here we automatically get the next element in register ebx and store it into register eax without the need of incrementing the pointer of the current register and then storing the contents of the incremented register to another register.
 
-%---------------PART 2 OF PART 2 BEGINS HERE----------------
+\section{MIPS and JVM}
+\subsection{Line 36}
 Our first ``compilation" of code is accessing arrays and modifying its content that begins on line 36 in Primes.c:
 
 \hspace*{2.2 in} prime[i*k]=0
@@ -111,13 +113,12 @@ JVM on the other hand would generate a very different type of code:
 \\7  iastore
 \end{myindentpar}
 
-JVM uses an stack based system. In doing so many of the function calls and computation require heavy usage of stacks. Lines 0 and 1 begin by loading k and i to the stack. imul takes the multiplication of the two and line 3 stores the result. aloud will load the address of the array(in this case prime). The next thing pushed onto the stack is i*k which we stored within line 3, so line 5 will push that number onto the stack. The last value pushed, is the value to be written into the location. iastore, also known as integer array store, will store the value of the integer into the array prime.
+JVM uses a stack based system. In doing so, many of the function calls and computation require heavy usage of stacks. Lines 0 and 1 begin by loading k and i to the stack. imul takes the multiplication of the two and line 3 stores the result. aloud will load the address of the array(in this case prime). The next thing pushed onto the stack is i*k which we stored within line 3, so line 5 will push that number onto the stack. The last value pushed, is the value to be written into the location. iastore, also known as integer array store, will store the value of the integer into the array prime.
 
 %Second Statement
-
+\subsection{Line 63}
 Our second ``compilation" of code is an if statement that begins on line 63 in Primes.c:
 \begin{verbatim}
-//Function call with parameter
    crossout(base);
 \end{verbatim}
 
@@ -147,13 +148,13 @@ The {\bf la} instruction (Load Address) puts the address of base into register \
 
 We use {\bf la} in a similar fashion as above. It gets the address of our function crossout and stores it in register \$25. We then call crossout by using its address which we saved earlier in register \$25. The {\bf jal} instruction does just this. It is called {\bf jump and link}, which means we will jump to the subroutine pointed to by \$25 and save the return address in \$31. Again, we use register \$31 to follow RISC philosophy of orthogonality, we could have used any free registers if we wanted.
 
-Note that our instructions above {\bf la and lw} are not actual instruction implemented into the hardware. They are actually a feature of MIPS called {\bf pseudoinstruction}. Consider 
+Note that our instructions above {\bf la and lw} are not actual instruction implemented into the hardware. They are actually a feature of MIPS called {\bf pseudoinstructions}. Consider 
 
 \begin{verbatim}
    la $2, base
 \end{verbatim}
 
-One issue here is that {\bf base} is a 32-bit address and each MIPS instruction are also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us by pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
+One issue here is that {\bf base} is a 32-bit address and each MIPS instruction is also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us via a pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
 
 %JVM
 
@@ -192,6 +193,7 @@ We can see that base is in slot 2 of worker()'s local variable section. iload\_2
 
 
 %3rd Statement
+\subsection{Line 104}
 Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
 
 \begin{verbatim}
@@ -221,7 +223,7 @@ Now let's look at the first chunk of code:
     lw $s3, $s3
 \end{verbatim}
 
-The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) With the next \textbf{ori} instruction we move the address of the first element of the \textbf{prime} array (or just \textbf{prime}) into register \$s3, as \$s3 will eventually hold our accessed element of \textbf{prime}. The addiu instruction then adds the offset held in \$s2 to \textbf{prime}, and puts it back in \$s3. \$s3 now holds the address of the element in \textbf{prime} that we want to access. Finally, the lw instruction takes the word pointed to in the \$s3 register and stores it in \$s3. (Essentially a dereference of \$s3.) We now have everything we need to do our \textbf{if} statement. Let's continue on to the next segment of code:
+The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) With the next \textbf{ori} instruction we move the address of the first element of the \textbf{prime} array (or just \textbf{prime}) into register \textbf{\$s3}, as \textbf{\$s3} will eventually hold our accessed element of \textbf{prime}. The addiu instruction then adds the offset held in \textbf{\$s2} to \textbf{prime}, and puts it back in \$s3. \$s3 now holds the address of the element in \textbf{prime} that we want to access. Finally, the lw instruction takes the word pointed to in the \textbf{\$s3} register and stores it in \textbf{\$s3}. (Essentially a dereference of \textbf{\$s3}.) We now have everything we need to do our \textbf{if} statement. Let's continue on to the next segment of code:
 
 \begin{verbatim}
     beq $s3, $0, .L1
@@ -229,7 +231,7 @@ The first line multiplies the index by 4 and places it in a new register, effect
     addiu $s4, $s4, 1
 \end{verbatim}
 
-Now that we have our desired operand for the \textbf{if} statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the \textbf{nprimes++} statement inside the \textbf{if}. If \$s3 is zero, we jump to another location that is outside the scope of this statement. 
+Now that we have our desired operand for the \textbf{if} statment stored in \textbf{\$s3}, we compare it to zero with the beq instruction. This takes advantage of the fact that \textbf{\$0} will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \textbf{\$s3} is not zero, we will fall through to the \textbf{nprimes++} statement inside the \textbf{if}. If \textbf{\$s3} is zero, we jump to another location that is outside the scope of this statement. 
 
 By now you may have noticed that the line
 
@@ -237,7 +239,7 @@ By now you may have noticed that the line
     addiu $s1, $s1, 1
 \end{verbatim}
 
-does not actually correspond to the \textbf{nprimes}++ statement. What it actually corresponds to is the statement \textbf{i++}. This instruction is specifically placed here so as to fill a delay slot produced by the preceding \textbf{beq} instruction, thereby increasing the efficiency of the code. It can be placed here because \textbf{i} will be incremented regardless of whether we branch or not. Our last instruction is an \textbf{addiu} that will only be executed if the \textbf{beq} instruction did not branch. It is equivalent to the \textbf{nprimes}++ statement.
+does not actually correspond to the \textbf{nprimes}++ statement. What it actually corresponds to is the statement \textbf{i++}. This instruction is specifically placed here so as to fill a delay slot produced by the preceding \textbf{beq} instruction, thereby increasing the efficiency of the code. It can be placed here because \textbf{i} will be incremented regardless of whether we branch or not. Our last instruction is an \textbf{addiu} that will only be executed if the \textbf{beq} instruction did not branch. It is equivalent to the expected \textbf{nprimes}++ statement.
 
 %JVM
 
@@ -270,5 +272,26 @@ In this portion of the code, we want to obtain the requested element of the \tex
 
 Now that the value we want to check is on the top of the stack, we use \textbf{ifeq} to check if the value is zero. (If we had used, say, \textbf{if\_icmpeq} instead, we would have had to place an extra 0 on the stack.) If it is, we branch to offset 0, which we assume to be the start of the for loop that this if statment is contained in. If the value is not zero, we continue on to increment slot 3 by 1, which in this case is our index, \textbf{i}.
 
+\part{}
 
-\end{document}  % required; the document ends here
+%essay goes here
+
+\appendix
+\textbf{\Large Appendix}
+\\\\
+\textbf{Christopher Chen}
+\\Part 1.1.1
+\\Part 1.2.3
+\\LaTeX Formatting
+
+\textbf{Triet Nguyen}
+\\Part 1.1.2
+\\Part 1.2.2
+
+\textbf{Stefan Peterson}
+\\Part 2
+
+\textbf{Andrew Yi}
+\\Part 1.1.3
+\\Part 1.2.1
+\end{document}
