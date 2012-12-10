@@ -75,6 +75,45 @@ Here we automatically get the next element in register ebx and store it into reg
 
 %Second Statement
 
+Our second ``compilation" of code is an if statement that begins on line 63 in Primes.c:
+\begin{verbatim}
+//Function call with parameter
+   crossout(base);
+\end{verbatim}
+
+Here is the ``compiled" code in MIPS.
+
+\begin{verbatim}
+MIPS "compiled" code:
+   la $2, base
+   lw $4, 0($2)
+   la $25, crossout
+   jal $31, $25
+\end{verbatim}
+
+The code above is used to pass arguments into a function and then calls the function. Here is how it works. 
+
+\begin{verbatim}
+   la $2, base
+   lw $4, 0($2)
+\end{verbatim}
+
+The {\bf la} instruction (Load Address) puts the address of base into register \$2. The {\bf lw} instruction (Load Word), which uses based addressing, adds 0 to the address within register \$2 and stores the content within that address into \$4. We use register \$4 as the suggested register for passing arguments.
+
+\begin{verbatim}
+   la $25, crossout
+   jal $31, $25
+\end{verbatim}
+
+We use {\bf la} in a similar fashion as above. It gets the address of our function crossout and stores it in register \$25. We then call crossout by using its address which we saved earlier in register \$25. The {\bf jal} instruction does just this. It is called {\bf jump and link}, which means we will jump to the subroutine pointed to by \$25 and save the return address in \$31. Again, we use register \$31 to follow RISC philosophy of orthogonality, we could have used any free registers if we wanted.
+
+Note that our instructions above {\bf la and lw} are not actual instruction implemented into the hardware. They are actually a feature of MIPS called {\bf pseudoinstruction}. Consider 
+
+\begin{verbatim}
+   la $2, base
+\end{verbatim}
+
+One issue here is that {\bf base} is a 32-bit address and each MIPS instruction are also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us by pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
 %3rd Statement
 Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
 \begin{verbatim}
