@@ -152,9 +152,6 @@ JVM on the other hand would generate a very different type of code:
 
 \end{myindentpar}
 
-
-JVM uses an stack based system. In doing so many of the function calls and computation require heavy usage of stacks. Lines 0 and 1 begin by loading k and i to the stack. imul takes the multiplication of the two and line 3 stores the result. aloud will load the address of the array(in this case prime). The next thing pushed onto the stack is i*k which we stored within line 3, so line 5 will push that number onto the stack. The last value pushed, is the value to be written into the location. iastore, also known as integer array store, will store the value of the integer into the array prime.
-
 %Second Statement
 
 Our second ``compilation" of code is an if statement that begins on line 63 in Primes.c:
@@ -237,80 +234,80 @@ We can see that base is in slot 2 of worker()'s local variable section. iload\_2
 Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
 
 \begin{verbatim}
-if (prime[i]) {
-     nprimes++;
-}
+    if (prime[i]) {
+        nprimes++;
+    }
 \end{verbatim}
 
-We'll start off by presenting the entirety of the MIPS assembly code, and then work though it line by line. (We have assumed that the address of the first element of the ``prime" array is in the register \$s0, the index ``i" is in the register \$s1, and $nprimes$ is in \$s4.)
+We'll start off by presenting the entirety of the MIPS assembly code, and then work though it line by line. (We have assumed that the address of the first element of the ``prime" array is in the register \$s0, the index ``i" is in the register \$s1, and \textbf{nprimes} is in \$s4.)
 
 \begin{verbatim}
-sll $s2, $s1, 2
-ori $s3, $s0, 0
-addu $s3, $s3, $s2
-lw $s3, $s3
-beq $s3, $0, .L1
-addiu $s1, $s1, 1
-addiu $s4, $s4, 1
+    sll $s2, $s1, 2
+    ori $s3, $s0, 0
+    addu $s3, $s3, $s2
+    lw $s3, $s3
+    beq $s3, $0, .L1
+    addiu $s1, $s1, 1
+    addiu $s4, $s4, 1
 \end{verbatim}
 
 Now let's look at the first chunk of code:
 
 \begin{verbatim}
-sll $s2, $s1, 2
-ori $s3, $s0, 0
-addiu $s3, $s3, $s2
-lw $s3, $s3
+    sll $s2, $s1, 2
+    ori $s3, $s0, 0
+    addiu $s3, $s3, $s2
+    lw $s3, $s3
 \end{verbatim}
 
-The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) With the next $ori$ instruction we move the address of the first element of the $prime$ array (or just $prime$) into register \$s3, as \$s3 will eventually hold our accessed element of $prime$. The addiu instruction then adds the offset held in \$s2 to $prime$, and puts it back in \$s3. \$s3 now holds the address of the element in $prime$ that we want to access. Finally, the lw instruction takes the word pointed to in the \$s3 register and stores it in \$s3. (Essentially a dereference of \$s3.) We now have everything we need to do our $if$ statement. Let's continue on to the next segment of code:
+The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) With the next \textbf{ori} instruction we move the address of the first element of the \textbf{prime} array (or just \textbf{prime}) into register \$s3, as \$s3 will eventually hold our accessed element of \textbf{prime}. The addiu instruction then adds the offset held in \$s2 to \textbf{prime}, and puts it back in \$s3. \$s3 now holds the address of the element in \textbf{prime} that we want to access. Finally, the lw instruction takes the word pointed to in the \$s3 register and stores it in \$s3. (Essentially a dereference of \$s3.) We now have everything we need to do our \textbf{if} statement. Let's continue on to the next segment of code:
 
 \begin{verbatim}
-beq $s3, $0, .L1
-addiu $s1, $s1, 1
-addiu $s4, $s4, 1
+    beq $s3, $0, .L1
+    addiu $s1, $s1, 1
+    addiu $s4, $s4, 1
 \end{verbatim}
 
-Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location that is outside the scope of this statement. 
+Now that we have our desired operand for the \textbf{if} statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the \textbf{nprimes++} statement inside the \textbf{if}. If \$s3 is zero, we jump to another location that is outside the scope of this statement. 
 
 By now you may have noticed that the line
 
 \begin{verbatim}
-addiu $s1, $s1, 1
+    addiu $s1, $s1, 1
 \end{verbatim}
 
-does not actually correspond to the $nprimes++$ statement. What it actually corresponds to is the statement $i++$. This instruction is specifically placed here so as to fill a delay slot produced by the preceding $beq$ instruction, thereby increasing the efficiency of the code. It can be placed here because $i$ will be incremented regardless of whether we branch or not. Our last instruction is an $addiu$ that will only be executed if the $beq$ instruction did not branch. It is equivalent to the $nprimes++$ statement.
+does not actually correspond to the \textbf{nprimes}++ statement. What it actually corresponds to is the statement \textbf{i++}. This instruction is specifically placed here so as to fill a delay slot produced by the preceding \textbf{beq} instruction, thereby increasing the efficiency of the code. It can be placed here because \textbf{i} will be incremented regardless of whether we branch or not. Our last instruction is an \textbf{addiu} that will only be executed if the \textbf{beq} instruction did not branch. It is equivalent to the \textbf{nprimes}++ statement.
 
 %JVM
 
-Now on to the JVM version of the "compiled" code:
+Now on to the JVM version of the ``compiled" code:
 
-(We'll assume $nprimes$ is in slot 1, $prime$ is in slot 2 and $i$ is in slot 3.)
+(We'll assume \textbf{nprimes} is in slot 1, \textbf{prime} is in slot 2 and \textbf{i} is in slot 3.)
 
 \begin{verbatim}
-10  aload_2
-11  iload_3
-12  iaload
-13  ifeq 0
-16  iinc 3, 1
+    10  aload_2
+    11  iload_3
+    12  iaload
+    13  ifeq 0
+    16  iinc 3, 1
 \end{verbatim}
 
 Let's split this code into two sgements that are roughly analagous to those given in the MIPS version of the code. Here's the first segement:
 
 \begin{verbatim}
-10  aload_2
-11  iload_3
-12  iaload
+    10  aload_2
+    11  iload_3
+    12  iaload
 \end{verbatim}
 
-In this portion of the code, we want to obtain the requested element of the $prime$ array. If we were to do this in the same manner that we used in the MIPS version, it would require a great deal of convoluted loads and adds. So we use iaload instead. But in order to use that instruction, a little setup is required first. We need to move the address of $prime$ onto the stack, and then the index of the requested element, which we do with $aload_2$ and $iload_3$. Now we are ready to execute $iaload$, which places the requested element of $prime$ onto the top of the stack. This brings us to the second portion:
+In this portion of the code, we want to obtain the requested element of the \textbf{prime} array. If we were to do this in the same manner that we used in the MIPS version, it would require a great deal of convoluted loads and adds. So we use iaload instead. But in order to use that instruction, a little setup is required first. We need to move the address of \textbf{prime} onto the stack, and then the index of the requested element, which we do with \textbf{aload\_2} and \textbf{iload\_3}. Now we are ready to execute \textbf{iaload}, which places the requested element of \textbf{prime} onto the top of the stack. This brings us to the second portion:
 
 \begin{verbatim}
-13  ifeq 0
-16  iinc 3, 1
+    13  ifeq 0
+    16  iinc 3, 1
 \end{verbatim}
 
-Now that the value we want to check is on the top of the stack, we use $ifeq$ to check if the value is zero. (If we had used, say, $if_icmpeq$ instead, we would have had to place an extra 0 on the stack.) If it is, we branch to offset 0, which we assume to be the start of the for loop that this if statment is contained in. If the value is not zero, we continue on to increment slot 3 by 1, which in this case is our index, $i$.
+Now that the value we want to check is on the top of the stack, we use \textbf{ifeq} to check if the value is zero. (If we had used, say, \textbf{if\_icmpeq} instead, we would have had to place an extra 0 on the stack.) If it is, we branch to offset 0, which we assume to be the start of the for loop that this if statment is contained in. If the value is not zero, we continue on to increment slot 3 by 1, which in this case is our index, \textbf{i}.
 
 
 \end{document}  % required; the document ends here
