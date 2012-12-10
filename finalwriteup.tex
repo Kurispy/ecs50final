@@ -116,12 +116,14 @@ Note that our instructions above {\bf la and lw} are not actual instruction impl
 One issue here is that {\bf base} is a 32-bit address and each MIPS instruction are also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us by pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
 %3rd Statement
 Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
+
 \begin{verbatim}
 if (prime[i]) {
      nprimes++;
 }
 \end{verbatim}
-We'll start off by presenting the entirety of the MIPS assembly code, and then work though it line by line. (We have assumed that the address of the first element of the ``prime" array is in the register \$s0 and that the index ``i" is in the register \$s1.)
+
+We'll start off by presenting the entirety of the MIPS assembly code, and then work though it line by line. (We have assumed that the address of the first element of the ``prime" array is in the register \$s0, the index ``i" is in the register \$s1, and $nprimes$ is in \$s4.)
 
 \begin{verbatim}
 sll $s2, $s1, 2
@@ -142,7 +144,21 @@ addiu $s3, $s3, $s2
 lw $s3, $s3
 \end{verbatim}
 
-The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) We then move the address of the first element of the $prime$ array (or just $prime$) into register \$s3, as \$s3 will eventually hold our accessed element of $prime$. 
+The first line multiplies the index by 4 and places it in a new register, effectually converting the index from an integer-sized offset to a byte-sized offset. (The reason we place the converted index in a new register is to preserve the unmodified index for later comparisons and modifications that are outside the scope of this statement.) With the next $ori$ instruction we move the address of the first element of the $prime$ array (or just $prime$) into register \$s3, as \$s3 will eventually hold our accessed element of $prime$. The addiu instruction then adds the offset held in \$s2 to $prime$, and puts it back in \$s3. \$s3 now holds the address of the element in $prime$ that we want to access. Finally, the lw instruction takes the word pointed to in the \$s3 register and stores it in \$s3. (Essentially a dereference of \$s3.) We now have everything we need to do our $if$ statement. Let's continue on to the next segment of code:
+
+\begin{verbatim}
+beq $s3, $0, .L1
+addiu $s1, $s1, 1
+addiu $s4, $s4, 1
+\end{verbatim}
+
+Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location, which in this case would be the top of the for loop that the $if$ statement is contained in. By now you may have noticed that the line
+
+\begin{verbatim}
+addiu $s1, $s1, 1
+\end{verbatim}
+
+does not actually correspond to the $nprimes++$ statement. What it actually corresponds to is the statement $i++$. This instruction is specifically placed here so as to fill a delay slot produced by the preceding $beq$ instruction.
 
 
 \end{document}  % required; the document ends here
