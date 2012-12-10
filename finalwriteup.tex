@@ -114,6 +114,9 @@ Note that our instructions above {\bf la and lw} are not actual instruction impl
 \end{verbatim}
 
 One issue here is that {\bf base} is a 32-bit address and each MIPS instruction are also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us by pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
+
+
+
 %3rd Statement
 Our third and final ``compilation" of code is an if statement that begins on line 104 in Primes.c:
 
@@ -152,13 +155,16 @@ addiu $s1, $s1, 1
 addiu $s4, $s4, 1
 \end{verbatim}
 
-Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location, which in this case would be the top of the for loop that the $if$ statement is contained in. By now you may have noticed that the line
+Now that we have our desired operand for the $if$ statment stored in \$s3, we compare it to zero with the beq instruction. This takes advantage of the fact that \$0 will always contain the constant 0. If we had used a different register to perform the comparison we would have had to zero it out first in order to make sure it was 0. If \$s3 is not zero, we will fall through to the $nprimes++$ statement inside the $if$. If \$s3 is zero, we jump to another location that is outside the scop of this statement. 
+
+By now you may have noticed that the line
 
 \begin{verbatim}
 addiu $s1, $s1, 1
 \end{verbatim}
 
-does not actually correspond to the $nprimes++$ statement. What it actually corresponds to is the statement $i++$. This instruction is specifically placed here so as to fill a delay slot produced by the preceding $beq$ instruction.
+does not actually correspond to the $nprimes++$ statement. What it actually corresponds to is the statement $i++$. This instruction is specifically placed here so as to fill a delay slot produced by the preceding $beq$ instruction, thereby increasing the efficiency of the code. It can be placed here because $i$ will be incremented regardless of whether we branch or not. Our last instruction is an $addiu$ that will only be executed if the $beq$ instruction did not branch. It is equivalent to the $nprimes++$ statement.
+
 
 
 \end{document}  % required; the document ends here
