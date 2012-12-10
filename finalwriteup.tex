@@ -115,6 +115,8 @@ Note that our instructions above {\bf la and lw} are not actual instruction impl
 
 One issue here is that {\bf base} is a 32-bit address and each MIPS instruction are also 32-bit. This gives us no room to store the address AND the instruction. So {\bf la} will break up the address into smaller bit sections and store them in register \$2. This requires a few extra instructions but is done for us by pseudoinstruction. Another issue is that we need to let the assembler know that we want to get the address of base and not the value, {\bf la} will also take care of that.
 
+%JVM
+
 We will now look at the same line in Primes.c except in JVM. Before we dive into the code, we must make some assumptions since JAVA uses a different layout than C. We will assume that main and all methods are within a Class Primes and that all methods are static and work with JAVA. We will also assume that crossout is method number 6.
 
 The code we will be looking at is 
