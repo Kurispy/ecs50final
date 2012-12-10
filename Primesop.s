@@ -137,11 +137,15 @@ main:
 	.cfi_offset 6, -12
 	.cfi_offset 3, -16
 	movl	12(%ebp), %ebx
+
 	movl	4(%ebx), %eax
+
 	movl	%eax, (%esp)
 	call	atoi
 	movl	%eax, n
+
 	movl	8(%ebx), %eax
+
 	movl	%eax, (%esp)
 	call	atoi
 	movl	%eax, nthreads

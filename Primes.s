@@ -122,14 +122,18 @@ main:
 	andl	$-16, %esp
 	subl	$32, %esp
 	movl	12(%ebp), %eax
+
 	addl	$4, %eax
 	movl	(%eax), %eax
+
 	movl	%eax, (%esp)
 	call	atoi
 	movl	%eax, n
 	movl	12(%ebp), %eax
+
 	addl	$8, %eax
 	movl	(%eax), %eax
+
 	movl	%eax, (%esp)
 	call	atoi
 	movl	%eax, nthreads

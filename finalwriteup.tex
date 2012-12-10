@@ -9,6 +9,10 @@
 \setlength{\textheight}{9.25in}
 \setlength{\parindent}{0in}
 \setlength{\parskip}{2mm}
+\newenvironment{myindentpar}[1]
+{\begin{list}{} 
+{\setlength{\leftmargin}{#1}}\item[]}
+{\end{list}}
 
 \begin{document}
 
@@ -70,87 +74,44 @@ Although there isn't a significant amount of time spent doing addition between t
 Here we automatically get the next element in register ebx and store it into register eax without the need of incrementing the pointer of the current register and then storing the contents of the incremented register to another register.
 
 %---------------PART 2 OF PART 2 BEGINS HERE----------------
-
-%1st Statement
-
-\newenvironment{myindentpar}[1]
-
-{\begin{list}{} 
-
-{\setlength{\leftmargin}{#1}}\item[]}
-
-{\end{list}}
-
-
-{\bf prime[i*k]=0; (line 36)
-
-\\Array access and modify}
-
-
-%MIPS Section
-
-In line 36 of Primes.C, we are given the simple memory access and modification:
-
+Our first ``compilation" of code is accessing arrays and modifying its content that begins on line 36 in Primes.c:
 
 \hspace*{2.2 in} prime[i*k]=0
 
-
 MIPS is quite similar to the AT\&T syntax. If we were to attempt to do the same thing, the MIPS architecture compiled code would look something like this:
 
-
 .data
-
 \\\hspace*{.4 in}prime: .word 0
 
-
 .text
-
 \\\_\_start:
-
 \begin{myindentpar}{.4 in}
-
 \#have the other part of the code above
-
 \\la \$8, prime \#load address of prime into register \$t0
-
 \\mult \$9, \$10 \#assume \$9 holds i and \$10 holds k
-
 \\mflo \$11 \#store resultant in \$11
-
 \\add \$8, \$8, \$11
-
-\\sw 0, 0(\$8)
-
+\\sw 0, 0(\$8)\\
 \#rest of the code
-
 \end{myindentpar}
-
 
 The code starts by loading the address of the array prime into register \$8. Next it multiplies i and k which end up getting stored in register Hi and Lo according(Hi for upper 32 bits of the resultant and the Lo for the lower 32 bits). The command mflo takes the lower 32 bits of the resultant and stores it into register \$11 which will be used as a temporary storage. The following line will add the result of i*k and add that to the address of prime(currently stored in register \$8). and will finally change the value of the current position with 0.
 
 %JVM Section
-
 JVM on the other hand would generate a very different type of code:
 
 \begin{myindentpar}{.4 in}
-
 0 iload\_1
-
 \\1  iload\_2
-
 \\2  imul
-
 \\3  istore\_3
-
 \\4  aload\_1
-
 \\5  iload\_3
-
 \\6  iconst\_0
-
 \\7  iastore
-
 \end{myindentpar}
+
+JVM uses an stack based system. In doing so many of the function calls and computation require heavy usage of stacks. Lines 0 and 1 begin by loading k and i to the stack. imul takes the multiplication of the two and line 3 stores the result. aloud will load the address of the array(in this case prime). The next thing pushed onto the stack is i*k which we stored within line 3, so line 5 will push that number onto the stack. The last value pushed, is the value to be written into the location. iastore, also known as integer array store, will store the value of the integer into the array prime.
 
 %Second Statement
 
